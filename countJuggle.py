@@ -1,17 +1,29 @@
 import cv2
 from ultralytics import YOLO
+import os
 
-class BallTracker:
+class CountJuggles:
     def __init__(self):
+        print('loading model...')
         # Load the YOLO model for ball detection
-        self.model = YOLO("/Users/tomasgear/Desktop/Projects/Development/countJuggles.pt")
+        self.model = YOLO("/Users/tomasgear/Desktop/Projects/Development/countJuggle/countJuggles.pt")
 
-        # Open the video file or webcam
-        self.cap = cv2.VideoCapture("path/to/your/video.mp4")  # Change to 0 or 1 for webcam
+        video_path = "/Users/tomasgear/Desktop/Projects/Development/countJuggle/videos/edited/juggling_sample_1.mp4"
+        if not os.path.exists(video_path):
+            print(f"Error: Video file not found at {video_path}")
+            return
+
+        self.cap = cv2.VideoCapture(video_path)
+        if not self.cap.isOpened():
+            print("Error: Failed to open video file.")
+            return
+
+        print('Video file opened successfully.')
 
     def run(self):
-        # Process frames from the video
+    # Process frames from the video
         while self.cap.isOpened():
+            print('processing video file...')
             success, frame = self.cap.read()
             if not success:
                 break
@@ -19,26 +31,23 @@ class BallTracker:
             # Detect the ball
             results = self.model(frame, conf=0.65)
 
-            # Process each detection
-            for bbox in results.xyxy[0]:
-                x1, y1, x2, y2 = bbox[:4]
+            # Inside your run method
+            for result in results.xyxy[0]:  # results.xyxy[0] is a tensor of shape (n, 6) where n is the number of detections
+                if result[5] == 0:  # Assuming class '0' is for the ball; modify as per your model's classes
+                    x1, y1, x2, y2 = int(result[0]), int(result[1]), int(result[2]), int(result[3])
+                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)  # Draw a rectangle
 
-                # Calculate center coordinates of the ball
-                x_center = (x1 + x2) / 2
-                y_center = (y1 + y2) / 2
 
-                # Annotate and display the frame
-                cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
-                cv2.circle(frame, (int(x_center), int(y_center)), 5, (0, 0, 255), -1)
-                cv2.imshow("Ball Tracking", frame)
+            # Display the frame
+            cv2.imshow("Video", frame)
 
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
         # Release resources
         self.cap.release()
         cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    ball_tracker = BallTracker()
-    ball_tracker.run()
+    count_juggles = CountJuggles()
+    count_juggles.run()
