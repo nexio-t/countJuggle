@@ -28,14 +28,28 @@ class CountJuggles:
             if not success:
                 break
 
-            # Detect the ball
-            results = self.model(frame, conf=0.65)
+            # Detects the ball
+            results = self.model(frame, conf=0.60)
+
+            # Print the type and structure of results for debugging
+            # print('results is: ', results)
+            # print('results.boxes is: ', results.boxes)
+
+            boxes = results.boxes  # Boxes object for bbox outputs
+            masks = results.masks  # Masks object for segmentation masks outputs
+            keypoints = results.keypoints  # Keypoints object for pose outputs
+            probs = results.probs  # Probs object for classification outputs
+
+            print('boxes is: ', boxes)
+            print('maskes is: ', masks)
+            print('keypoints is: ', keypoints)
+            print('probs is: ', probs)
 
             # Inside your run method
-            for result in results.xyxy[0]:  # results.xyxy[0] is a tensor of shape (n, 6) where n is the number of detections
-                if result[5] == 0:  # Assuming class '0' is for the ball; modify as per your model's classes
-                    x1, y1, x2, y2 = int(result[0]), int(result[1]), int(result[2]), int(result[3])
-                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)  # Draw a rectangle
+            # for result in results.xyxy[0]:  # results.xyxy[0] is a tensor of shape (n, 6) where n is the number of detections
+            #     if result[5] == 0:  # Assuming class '0' is for the ball; modify as per your model's classes
+            #         x1, y1, x2, y2 = int(result[0]), int(result[1]), int(result[2]), int(result[3])
+            #         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)  # Draw a rectangle
 
 
             # Display the frame
