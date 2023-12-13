@@ -2,13 +2,13 @@ import cv2
 from ultralytics import YOLO
 
 # Issues: Right now, the video is very slow and glitchy. The video needs to be smooth. 
-# Issue 2: Why is a sports ball label being used? I called it soccer ball when I trained it
+# SOLVED Issue 2: Why is a sports ball label being used? I called it soccer ball when I trained it (I used the wrong model)
 # Issue 3: I need to make sure I'm using GPU and CPU
 
 class CountJuggles:
     def __init__(self):
         # Load the YOLO model for ball detection
-        self.model = YOLO("/Users/tomasgear/Desktop/Projects/Development/countJuggle/countJuggles.pt")
+        self.model = YOLO("/Users/tomasgear/Desktop/Projects/Development/countJuggle/best.pt")
         self.pose_model = YOLO("yolov8s-pose.pt")
 
         video_path = "/Users/tomasgear/Desktop/Projects/Development/countJuggle/videos/edited/juggling_sample_1.mp4"
@@ -19,7 +19,7 @@ class CountJuggles:
         self.juggle_count = 0
 
         # Frame skipping
-        self.frame_skip = 1  # process every 5th frame, adjust as needed
+        self.frame_skip = 2  # process every 5th frame, adjust as needed
         self.frame_counter = 0
 
     def run(self):
