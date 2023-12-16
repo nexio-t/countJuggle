@@ -14,7 +14,7 @@ class CountJuggles:
         self.prev_ball_position = None
         self.juggle_count = 0
         self.proximity_threshold = 50  
-        self.frame_skip = 2
+        self.frame_skip = 1
         self.frame_counter = 0
 
     def run(self):
@@ -45,6 +45,11 @@ class CountJuggles:
                         if ball_position is not None:
                             self.update_juggle_count(ball_position, left_ankle, right_ankle)
 
+                     # Display juggle count on the video screen
+                    font = cv2.FONT_HERSHEY_SIMPLEX
+                    cv2.putText(pose_annotated_frame, f'Juggles: {self.juggle_count}', 
+                                (10, 50), font, 1, (255, 255, 255), 2, cv2.LINE_AA)
+
                     cv2.imshow("YOLOv8 Inference", pose_annotated_frame)
                     if cv2.waitKey(1) & 0xFF == ord("q"):
                         break
@@ -58,6 +63,11 @@ class CountJuggles:
         # Calculate distance to both ankles
         distance_to_left = np.linalg.norm(np.array(left_ankle) - np.array(ball_position))
         distance_to_right = np.linalg.norm(np.array(right_ankle) - np.array(ball_position))
+
+        print('Distance to left ankle: ', distance_to_left)
+        print('Distance to right ankle: ', distance_to_right)
+        
+        print('Distance ball_position: ', ball_position)
 
         # Check if the ball is close to either ankle
         if distance_to_left < self.proximity_threshold or distance_to_right < self.proximity_threshold:

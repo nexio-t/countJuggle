@@ -1,66 +1,100 @@
 import cv2
 from ultralytics import YOLO
-import os
+import numpy as np
 
+### December 16, 2023 
+### Script is working and accurately counting juggles after increasing proximity threshold to 70 pixels
+### Next: Try to find a way to count juggles agnostic of proximity to ankles, meaning just based on air movement alone
 class CountJuggles:
     def __init__(self):
-        print('loading model...')
-        # Load the YOLO model for ball detection
-        self.model = YOLO("/Users/tomasgear/Desktop/Projects/Development/countJuggle/countJuggles.pt")
+        self.model = YOLO("/Users/tomasgear/Desktop/Projects/Development/countJuggle/best.pt")
+        self.pose_model = YOLO("yolov8s-pose.pt")
 
         video_path = "/Users/tomasgear/Desktop/Projects/Development/countJuggle/videos/edited/juggling_sample_1.mp4"
-        if not os.path.exists(video_path):
-            print(f"Error: Video file not found at {video_path}")
-            return
-
         self.cap = cv2.VideoCapture(video_path)
-        if not self.cap.isOpened():
-            print("Error: Failed to open video file.")
-            return
 
-        print('Video file opened successfully.')
+        self.has_juggled_recently = False
+
+        self.body_index = {"left_ankle": 15, "right_ankle": 16}
+        self.prev_ball_position = None
+        self.juggle_count = 0
+        self.proximity_threshold = 70  
+        self.frame_skip = 1
+        self.frame_counter = 0
 
     def run(self):
-    # Process frames from the video
         while self.cap.isOpened():
-            print('processing video file...')
             success, frame = self.cap.read()
-            if not success:
+            if success:
+                self.frame_counter += 1
+
+                if self.frame_counter >= self.frame_skip:
+                    self.frame_counter = 0
+                    ball_position = None
+
+                    pose_results = self.pose_model(frame, verbose=False, conf=0.5)
+                    pose_annotated_frame = pose_results[0].plot()  
+
+                    results_list = self.model(frame, verbose=False, conf=0.60)
+                    for results in results_list:
+                        for bbox in results.boxes.xyxy:
+                            x1, y1, x2, y2 = bbox[:4]
+                            ball_position = (x1 + x2) / 2, (y1 + y2) / 2
+                            cv2.rectangle(pose_annotated_frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
+
+                    keypoints_data = pose_results[0].keypoints.data
+                    if keypoints_data.shape[1] > max(self.body_index.values()):
+                        left_ankle = keypoints_data[0, self.body_index["left_ankle"], :2]
+                        right_ankle = keypoints_data[0, self.body_index["right_ankle"], :2]
+
+                        if ball_position is not None:
+                            self.update_juggle_count(ball_position, left_ankle, right_ankle)
+                            self.prev_ball_position = ball_position  # Update the previous ball position
+
+                    # Display juggle count on the video screen
+                    font = cv2.FONT_HERSHEY_SIMPLEX
+                    cv2.putText(pose_annotated_frame, f'Juggles: {self.juggle_count}', 
+                                (10, 50), font, 1, (255, 255, 255), 2, cv2.LINE_AA)
+
+                    cv2.imshow("YOLOv8 Inference", pose_annotated_frame)
+                    if cv2.waitKey(1) & 0xFF == ord("q"):
+                        break
+            else:
                 break
 
-            # Detects the ball
-            results = self.model(frame, conf=0.60)
-
-            # Print the type and structure of results for debugging
-            # print('results is: ', results)
-            # print('results.boxes is: ', results.boxes)
-
-            boxes = results.boxes  # Boxes object for bbox outputs
-            masks = results.masks  # Masks object for segmentation masks outputs
-            keypoints = results.keypoints  # Keypoints object for pose outputs
-            probs = results.probs  # Probs object for classification outputs
-
-            print('boxes is: ', boxes)
-            print('maskes is: ', masks)
-            print('keypoints is: ', keypoints)
-            print('probs is: ', probs)
-
-            # Inside your run method
-            # for result in results.xyxy[0]:  # results.xyxy[0] is a tensor of shape (n, 6) where n is the number of detections
-            #     if result[5] == 0:  # Assuming class '0' is for the ball; modify as per your model's classes
-            #         x1, y1, x2, y2 = int(result[0]), int(result[1]), int(result[2]), int(result[3])
-            #         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)  # Draw a rectangle
-
-
-            # Display the frame
-            cv2.imshow("Video", frame)
-
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-
-        # Release resources
         self.cap.release()
         cv2.destroyAllWindows()
+
+    def update_juggle_count(self, ball_position, left_ankle, right_ankle):
+        # Calculate distance to both ankles
+        distance_to_left = np.linalg.norm(np.array(left_ankle) - np.array(ball_position))
+        distance_to_right = np.linalg.norm(np.array(right_ankle) - np.array(ball_position))
+
+        # Determine if the ball is in proximity to either ankle
+        proximity_to_ankle = distance_to_left < self.proximity_threshold or distance_to_right < self.proximity_threshold
+
+        print('proximity_to_ankle: ', proximity_to_ankle)
+
+        # If the ball was 'in air' and now close to a foot, count a juggle
+        if self.prev_ball_position is not None:
+            if not self.has_juggled_recently and proximity_to_ankle:
+                self.juggle_count += 1
+                self.has_juggled_recently = True
+            elif not proximity_to_ankle:
+                self.has_juggled_recently = False  # Ball is 'in air' again
+        else:
+            if proximity_to_ankle:
+                self.juggle_count += 1  # Initial juggle count in case the first frame starts with a juggle
+
+        self.prev_ball_position = ball_position  # Update the previous ball position
+
+        # Debug print statements (optional)
+        print('Distance to left ankle: ', distance_to_left)
+        print('Distance to right ankle: ', distance_to_right)
+        print('Ball position: ', ball_position)
+        print(f"Juggle Count: {self.juggle_count}")
+
+
 
 if __name__ == "__main__":
     count_juggles = CountJuggles()
