@@ -10,7 +10,10 @@ class CountJuggles:
         self.model = YOLO("/Users/tomasgear/Desktop/Projects/Development/countJuggle/best.pt")
         self.pose_model = YOLO("yolov8s-pose.pt")
 
-        video_path = "/Users/tomasgear/Desktop/Projects/Development/countJuggle/videos/edited/juggling_sample_1.mp4"
+        # video_path = "/Users/tomasgear/Desktop/Projects/Development/countJuggle/videos/edited/juggling_sample_1.mp4"
+        video_path = "/Users/tomasgear/Desktop/Projects/Development/countJuggle/videos/edited/juggle_sample_2.mp4"
+        # video_path = "/Users/tomasgear/Desktop/Projects/Development/countJuggle/videos/edited/juggle_sample_3.mp4"
+
         self.cap = cv2.VideoCapture(video_path)
 
         self.has_juggled_recently = False
@@ -42,6 +45,10 @@ class CountJuggles:
                             ball_position = (x1 + x2) / 2, (y1 + y2) / 2
                             cv2.rectangle(pose_annotated_frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
 
+                             # Apply the label "soccer ball"
+                            label = "Soccer Ball"
+                            cv2.putText(pose_annotated_frame, label, (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+
                     keypoints_data = pose_results[0].keypoints.data
                     if keypoints_data.shape[1] > max(self.body_index.values()):
                         left_ankle = keypoints_data[0, self.body_index["left_ankle"], :2]
@@ -51,10 +58,32 @@ class CountJuggles:
                             self.update_juggle_count(ball_position, left_ankle, right_ankle)
                             self.prev_ball_position = ball_position  # Update the previous ball position
 
-                    # Display juggle count on the video screen
+                    # Calculate the text size for the backdrop
+                    text = f'Juggles: {self.juggle_count}'
                     font = cv2.FONT_HERSHEY_SIMPLEX
-                    cv2.putText(pose_annotated_frame, f'Juggles: {self.juggle_count}', 
-                                (10, 50), font, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                    font_scale = 1.5  # Increase the font scale for larger text
+                    thickness = 3  # Thickness of the text
+                    text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
+
+                    # Padding for the text inside the rectangle
+                    padding = 20
+
+                    # Coordinates for the rectangle (adjust as needed)
+                    top_left = (10, 50)  # Adjusted to move the box down
+                    bottom_right = (10 + text_size[0] + padding, 50 + text_size[1] + padding)
+
+                    # Draw the white rectangle
+                    cv2.rectangle(pose_annotated_frame, top_left, bottom_right, (255, 255, 255), -1)
+
+                    # Display juggle count on the video screen with black font
+                    # Adjust the text position to be inside the rectangle
+                    cv2.putText(pose_annotated_frame, text, 
+                                (10 + padding // 2, 50 + text_size[1] + padding // 2), 
+                                font, font_scale, (0, 0, 0), thickness, cv2.LINE_AA)
+
+                    # font = cv2.FONT_HERSHEY_SIMPLEX
+                    # cv2.putText(pose_annotated_frame, f'Juggles: {self.juggle_count}', 
+                    #             (10, 50), font, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
                     cv2.imshow("YOLOv8 Inference", pose_annotated_frame)
                     if cv2.waitKey(1) & 0xFF == ord("q"):
