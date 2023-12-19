@@ -45,7 +45,7 @@ class CountJuggles:
                             ball_position = (x1 + x2) / 2, (y1 + y2) / 2
                             cv2.rectangle(pose_annotated_frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
 
-                             # Apply the label "soccer ball"
+                          
                             label = "Soccer Ball"
                             cv2.putText(pose_annotated_frame, label, (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
@@ -56,27 +56,21 @@ class CountJuggles:
 
                         if ball_position is not None:
                             self.update_juggle_count(ball_position, left_ankle, right_ankle)
-                            self.prev_ball_position = ball_position  # Update the previous ball position
+                            self.prev_ball_position = ball_position  
 
-                    # Calculate the text size for the backdrop
                     text = f'Juggles: {self.juggle_count}'
                     font = cv2.FONT_HERSHEY_SIMPLEX
-                    font_scale = 1.5  # Increase the font scale for larger text
-                    thickness = 3  # Thickness of the text
+                    font_scale = 1.5  
+                    thickness = 3  
                     text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
 
-                    # Padding for the text inside the rectangle
                     padding = 20
 
-                    # Coordinates for the rectangle (adjust as needed)
-                    top_left = (10, 50)  # Adjusted to move the box down
+                    top_left = (10, 50)  
                     bottom_right = (10 + text_size[0] + padding, 50 + text_size[1] + padding)
 
-                    # Draw the white rectangle
                     cv2.rectangle(pose_annotated_frame, top_left, bottom_right, (255, 255, 255), -1)
 
-                    # Display juggle count on the video screen with black font
-                    # Adjust the text position to be inside the rectangle
                     cv2.putText(pose_annotated_frame, text, 
                                 (10 + padding // 2, 50 + text_size[1] + padding // 2), 
                                 font, font_scale, (0, 0, 0), thickness, cv2.LINE_AA)
@@ -84,7 +78,6 @@ class CountJuggles:
                     # font = cv2.FONT_HERSHEY_SIMPLEX
                     # cv2.putText(pose_annotated_frame, f'Juggles: {self.juggle_count}', 
                     #             (10, 50), font, 1, (255, 255, 255), 2, cv2.LINE_AA)
-
                     cv2.imshow("YOLOv8 Inference", pose_annotated_frame)
                     if cv2.waitKey(1) & 0xFF == ord("q"):
                         break
@@ -95,29 +88,25 @@ class CountJuggles:
         cv2.destroyAllWindows()
 
     def update_juggle_count(self, ball_position, left_ankle, right_ankle):
-        # Calculate distance to both ankles
         distance_to_left = np.linalg.norm(np.array(left_ankle) - np.array(ball_position))
         distance_to_right = np.linalg.norm(np.array(right_ankle) - np.array(ball_position))
 
-        # Determine if the ball is in proximity to either ankle
         proximity_to_ankle = distance_to_left < self.proximity_threshold or distance_to_right < self.proximity_threshold
 
         print('proximity_to_ankle: ', proximity_to_ankle)
 
-        # If the ball was 'in air' and now close to a foot, count a juggle
         if self.prev_ball_position is not None:
             if not self.has_juggled_recently and proximity_to_ankle:
                 self.juggle_count += 1
                 self.has_juggled_recently = True
             elif not proximity_to_ankle:
-                self.has_juggled_recently = False  # Ball is 'in air' again
+                self.has_juggled_recently = False  
         else:
             if proximity_to_ankle:
-                self.juggle_count += 1  # Initial juggle count in case the first frame starts with a juggle
+                self.juggle_count += 1 
 
-        self.prev_ball_position = ball_position  # Update the previous ball position
+        self.prev_ball_position = ball_position  
 
-        # Debug print statements (optional)
         print('Distance to left ankle: ', distance_to_left)
         print('Distance to right ankle: ', distance_to_right)
         print('Ball position: ', ball_position)
