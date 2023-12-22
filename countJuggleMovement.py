@@ -11,12 +11,17 @@ from datetime import datetime
 # Create necessary output directory in setup script
 # Fix premature counting -- include exclusion of contact with arms or hands as a juggle t
 # Update script to use a more extensively trained model - 30-50 epochs
+
+# Video 1: counts accurately
+# Video 2: counts accurately 
+# Video 3: Inaccurate - over by 3
+
 class CountJuggles:
     def __init__(self):
         self.model = YOLO("/Users/tomasgear/Desktop/Projects/Development/countJuggle/best.pt")
         self.pose_model = YOLO("yolov8s-pose.pt")
 
-        video_path = "/Users/tomasgear/Desktop/Projects/Development/countJuggle/videos/edited/juggle_sample_2.mp4"
+        video_path = "/Users/tomasgear/Desktop/Projects/Development/countJuggle/videos/edited/juggle_sample_3.mp4"
         self.cap = cv2.VideoCapture(video_path)
 
         self.fourcc = cv2.VideoWriter_fourcc(*'mp4v')  
@@ -26,7 +31,7 @@ class CountJuggles:
         self.juggle_count = 0
         self.frame_skip = 1
         self.frame_counter = 0
-
+        
         self.prev_y_center = None
         self.moving_up = False
         self.movement_threshold = 10

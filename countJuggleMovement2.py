@@ -17,6 +17,10 @@ class CountJuggles:
         self.pose_model = YOLO("yolov8s-pose.pt")
 
         video_path = "/Users/tomasgear/Desktop/Projects/Development/countJuggle/videos/edited/juggle_sample_2.mp4"
+        # video_path = "/Users/tomasgear/Desktop/Projects/Development/countJuggle/videos/edited/juggle_sample_3.mp4"
+        # video_path = "/Users/tomasgear/Desktop/Projects/Development/countJuggle/videos/edited/juggle_sample_1.mp4"
+
+
         self.cap = cv2.VideoCapture(video_path)
 
         self.fourcc = cv2.VideoWriter_fourcc(*'mp4v')  
