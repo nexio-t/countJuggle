@@ -1,6 +1,8 @@
 import cv2
 from ultralytics import YOLO
 import numpy as np
+from datetime import datetime
+
 
 # juggle sample 1 - WORKS!!!
 # juggle sample 6? - very close - TRY WITH NEW MODEL
@@ -26,7 +28,7 @@ class CountJuggles:
         self.model = YOLO("/Users/tomasgear/Desktop/Projects/Development/countJuggle/best_renamed.pt")
         self.pose_model = YOLO("yolov8s-pose.pt")
 
-        video_path = "/Users/tomasgear/Desktop/Projects/Development/countJuggle/videos/edited/juggle_sample_5.mp4"
+        video_path = "/Users/tomasgear/Desktop/Projects/Development/countJuggle/videos/edited/juggle_sample_2.mp4"
         self.cap = cv2.VideoCapture(video_path)
 
         # Combined juggle counting
@@ -34,6 +36,10 @@ class CountJuggles:
         self.recent_juggle_detected = False
         self.juggle_detection_cooldown = 10  # frames to wait before considering a new juggle
         self.frame_counter_since_last_juggle = 0
+
+        # Video output
+        self.fourcc = cv2.VideoWriter_fourcc(*'mp4v')  
+        self.out = None  
 
         # Proximity-based counting
         self.body_index = {"left_ankle": 15, "right_ankle": 16, "left_knee": 13, "right_knee": 14, "head": 0}
@@ -48,11 +54,21 @@ class CountJuggles:
         self.frame_skip = 0
         self.frame_counter = 0
 
+
     def run(self):
         while self.cap.isOpened():
             success, frame = self.cap.read()
             if success:
                 self.frame_counter += 1
+
+                if self.out is None:
+                    frame_height, frame_width = frame.shape[:2]
+                    now = datetime.now()
+                    timestamp = now.strftime("%m-%d-%Y-%H%M%S")
+                    output_path =  f"/Users/tomasgear/Desktop/Projects/Development/countJuggle/videos/output/{timestamp}.mp4" 
+                    self.out = cv2.VideoWriter(output_path, self.fourcc, 20.0, (frame_width, frame_height))
+
+
 
                 if self.frame_counter >= self.frame_skip:
                     self.frame_counter = 0
@@ -77,12 +93,15 @@ class CountJuggles:
                             self.update_juggle_count(ball_position, body_parts)
 
                     self.display_text(pose_annotated_frame, f'Juggles: {self.juggle_count}')
+
+                    self.out.write(pose_annotated_frame)  
                     cv2.imshow("YOLOv8 Inference", pose_annotated_frame)
                     if cv2.waitKey(1) & 0xFF == ord("q"):
                         break
             else:
                 break
 
+        self.out.release() 
         self.cap.release()
         cv2.destroyAllWindows()
 
@@ -163,7 +182,6 @@ class CountJuggles:
         print('trajectory_detected is: ', trajectory_detected, 'self.recent_juggle_detected', not self.recent_juggle_detected, "proximity_detected", proximity_detected)
         # Combined juggle count logic
         if trajectory_detected and not self.recent_juggle_detected and (proximity_detected or ball_near_person):
-            print('+++++++ JUGGLE INCREMENTED ++++++')
             self.juggle_count += 1
             self.recent_juggle_detected = True
             self.frame_counter_since_last_juggle = 0
@@ -186,11 +204,11 @@ class CountJuggles:
 
     def display_text(self, frame, text):
         font = cv2.FONT_HERSHEY_SIMPLEX
-        font_scale = 1.5
-        thickness = 3
+        font_scale = 3
+        thickness = 5
         text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
 
-        padding = 20
+        padding = 60
 
         top_left = (10, 50)
         bottom_right = (10 + text_size[0] + padding, 50 + text_size[1] + padding)
