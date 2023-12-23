@@ -3,6 +3,7 @@ from ultralytics import YOLO
 import numpy as np
 from datetime import datetime
 
+# KEEPING FOR REFERENCE
 class CountJuggles:
     def __init__(self):
         self.model = YOLO("/define/path/to/model")
