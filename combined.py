@@ -3,32 +3,15 @@ from ultralytics import YOLO
 import numpy as np
 from datetime import datetime
 
-
-# juggle sample 1 - WORKS!!!
-# juggle sample 6? - very close - TRY WITH NEW MODEL
-# juggle sample 7 - WORKS!!!!
-
-# for some reason new model isn't working as well with sample 1
-# Tomorrow: 
-# 1. make it more sensitive to the ball movement on video 6 below 
-# 2. Once you do that make sure it works with 6 and 7 
-# 3. Then try with sample 1, or revert sample 1 to the best.pt model
-
-
-# December 21 current
 # sample 2 -- DONE 
-# sample 7 -- DONE - need to cut off before the last second as it counts 21 juggles
-# sample 1 is not working at all -- the ball detection just isn't working
-# sample 6 -- DONE, works until about juggle 10 - so DONE
-
-### - Create Gif that shows video 1 and video 3 with the .best model as it more accurately tracks the ball
-
+# sample 7 -- DONE
+# sample 6 -- DONE
 class CountJuggles:
     def __init__(self):
-        self.model = YOLO("/Users/tomasgear/Desktop/Projects/Development/countJuggle/best_renamed.pt")
+        self.model = YOLO("/Users/tomasgear/Desktop/Projects/Development/countJuggle/best_two.pt")
         self.pose_model = YOLO("yolov8s-pose.pt")
 
-        video_path = "/Users/tomasgear/Desktop/Projects/Development/countJuggle/videos/edited/juggle_sample_2.mp4"
+        video_path = "/Users/tomasgear/Desktop/Projects/Development/countJuggle/videos/edited/juggle_sample_6.mp4"
         self.cap = cv2.VideoCapture(video_path)
 
         # Combined juggle counting
@@ -53,7 +36,6 @@ class CountJuggles:
 
         self.frame_skip = 0
         self.frame_counter = 0
-
 
     def run(self):
         while self.cap.isOpened():
@@ -83,7 +65,9 @@ class CountJuggles:
                             x1, y1, x2, y2 = bbox[:4]
                             ball_position = (x1 + x2) / 2, (y1 + y2) / 2
                             cv2.rectangle(pose_annotated_frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
-                            cv2.putText(pose_annotated_frame, "Soccer Ball", (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                            cv2.putText(pose_annotated_frame, "Soccer Ball", (int(x1), int(y1) - 10), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 1.0, 
+                            (255, 255, 255), 3)  
 
                     keypoints_data = pose_results[0].keypoints.data
                     if keypoints_data.shape[1] > max([value for key, value in self.body_index.items() if isinstance(value, int)]):
@@ -105,42 +89,6 @@ class CountJuggles:
         self.cap.release()
         cv2.destroyAllWindows()
 
-    # def update_juggle_count(self, ball_position, body_parts):
-    #     proximity_detected = any(np.linalg.norm(np.array(pos) - np.array(ball_position)) < self.proximity_threshold for pos in body_parts.values())
-
-    #     # Trajectory analysis
-    #     trajectory_detected = False
-    #     x_center, y_center = ball_position
-    #     if self.prev_y_center is not None:
-    #         movement = y_center - self.prev_y_center
-    #         print('movement is: ', movement, 'y_center is: ', y_center, 'prev_y_center is: ', self.prev_y_center, 'movement < -self.movement_threshold is: ', movement < -self.movement_threshold)
-    #         if movement < -self.movement_threshold:
-    #             print('condition one')
-    #             self.max_upward_movement = min(self.max_upward_movement, movement)
-    #             self.moving_up = True
-    #         elif movement > self.movement_threshold and self.moving_up:
-    #             print('condition two ===========')
-    #             if abs(self.max_upward_movement) > self.movement_threshold:
-    #                 trajectory_detected = True
-    #             self.moving_up = False
-    #             self.max_upward_movement = 0 
-
-
-    #     print('proximity_detected is: ', proximity_detected, 'trajectory_detected', trajectory_detected)
-    #     # Combined juggle count logic
-    #     if trajectory_detected and not self.recent_juggle_detected and proximity_detected:
-    #         self.juggle_count += 1
-    #         self.recent_juggle_detected = True
-    #         self.frame_counter_since_last_juggle = 0
-
-    #     if self.recent_juggle_detected:
-    #         self.frame_counter_since_last_juggle += 1
-    #         if self.frame_counter_since_last_juggle > self.juggle_detection_cooldown:
-    #             self.recent_juggle_detected = False
-            
-
-    #     self.prev_y_center = y_center
-
     def update_juggle_count(self, ball_position, body_parts):
         proximity_detected = any(np.linalg.norm(np.array(pos) - np.array(ball_position)) < self.proximity_threshold for pos in body_parts.values())
 
@@ -150,37 +98,23 @@ class CountJuggles:
         min_y, max_y = min(body_y_positions), max(body_y_positions)
         person_bbox = (min_x, min_y, max_x, max_y)
 
-        # Check if the ball is within or near the person's bounding box
+        # Checking if the ball is within or near the person's bounding box
         ball_near_person = self.is_ball_near_person(ball_position, person_bbox)
 
-        # Trajectory analysis
         trajectory_detected = False
-        x_center, y_center = ball_position
+        _, y_center = ball_position
         if self.prev_y_center is not None:
             movement = y_center - self.prev_y_center
-            print('movement is: ', movement, 'y_center is: ', y_center, 'prev_y_center is: ', self.prev_y_center, 'movement < -self.movement_threshold is: ', movement < -self.movement_threshold)
             
             if movement < -self.movement_threshold:
-                print('condition one')
                 self.max_upward_movement = min(self.max_upward_movement, movement)
                 self.moving_up = True
             elif self.moving_up:
-                # New condition: Check if the ball's upward movement has slowed down significantly
-                if abs(movement) < self.movement_threshold:  # Adjust the multiplier as needed
-                    print('condition peak detected')
+                if abs(movement) < self.movement_threshold:  
                     trajectory_detected = True
                     self.moving_up = False
                     self.max_upward_movement = 0
-                # elif movement > self.movement_threshold:
-                #     print('condition two ===========')
-                #     if abs(self.max_upward_movement) > self.movement_threshold:
-                #         trajectory_detected = True
-                #     self.moving_up = False
-                #     self.max_upward_movement = 0
-
-        print('proximity_detected is: ', proximity_detected, 'trajectory_detected', trajectory_detected)
-        print('trajectory_detected is: ', trajectory_detected, 'self.recent_juggle_detected', not self.recent_juggle_detected, "proximity_detected", proximity_detected)
-        # Combined juggle count logic
+     
         if trajectory_detected and not self.recent_juggle_detected and (proximity_detected or ball_near_person):
             self.juggle_count += 1
             self.recent_juggle_detected = True
@@ -197,7 +131,7 @@ class CountJuggles:
         x_center, y_center = ball_position
         min_x, min_y, max_x, max_y = person_bbox
 
-        buffer = 50  # Adjust this buffer distance as needed
+        buffer = 50 
         if (min_x - buffer <= x_center <= max_x + buffer) and (min_y - buffer <= y_center <= max_y + buffer):
             return True
         return False
