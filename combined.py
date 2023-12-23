@@ -8,7 +8,7 @@ from datetime import datetime
 # sample 6 -- DONE
 class CountJuggles:
     def __init__(self):
-        self.model = YOLO("/Users/tomasgear/Desktop/Projects/Development/countJuggle/best_two.pt")
+        self.model = YOLO("/Users/tomasgear/Desktop/Projects/Development/countJuggle/weights/best_two.pt")
         self.pose_model = YOLO("yolov8s-pose.pt")
 
         video_path = "/Users/tomasgear/Desktop/Projects/Development/countJuggle/videos/edited/juggle_sample_6.mp4"
@@ -92,7 +92,7 @@ class CountJuggles:
     def update_juggle_count(self, ball_position, body_parts):
         proximity_detected = any(np.linalg.norm(np.array(pos) - np.array(ball_position)) < self.proximity_threshold for pos in body_parts.values())
 
-         # Calculate the person's bounding box
+        # Here we calculate the person's bounding box
         body_x_positions, body_y_positions = zip(*body_parts.values())
         min_x, max_x = min(body_x_positions), max(body_x_positions)
         min_y, max_y = min(body_y_positions), max(body_y_positions)
