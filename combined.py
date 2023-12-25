@@ -92,13 +92,11 @@ class CountJuggles:
     def update_juggle_count(self, ball_position, body_parts):
         proximity_detected = any(np.linalg.norm(np.array(pos) - np.array(ball_position)) < self.proximity_threshold for pos in body_parts.values())
 
-        # Here we calculate the person's bounding box
         body_x_positions, body_y_positions = zip(*body_parts.values())
         min_x, max_x = min(body_x_positions), max(body_x_positions)
         min_y, max_y = min(body_y_positions), max(body_y_positions)
         person_bbox = (min_x, min_y, max_x, max_y)
 
-        # Checking if the ball is within or near the person's bounding box
         ball_near_person = self.is_ball_near_person(ball_position, person_bbox)
 
         trajectory_detected = False
