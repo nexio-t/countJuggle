@@ -28,7 +28,7 @@ I first set out to create this project to immerse myself cutting-edge computer v
 
 ## Assets
 
-You can run this script against the video clips found [here](), or you can use your own assets. You must download the trained model best.pt [here]() and save in the root of the directory. 
+You can run this script against the video clips found [here](https://drive.google.com/drive/folders/1TWDXXCVKoTqzt0nEnrsu77PWe4Nz3oRg), or you can use your own assets. You must download the trained model best.pt [here](https://drive.google.com/drive/folders/1Aa6gIt189lr_i8PW8bpKgNVFH9rYdM-q) and save in the root of the directory. 
 
 ## Usage
 1. Place still clips of a player juggling in the `videos/input` directory.
@@ -72,7 +72,7 @@ The video clip should open with the appropriate annotations, like so:
 
 ## Samples 
 
-You can view some output examples [here](), [here](), or [here](). 
+You can view some output examples [here](). 
 
 ## License
 This project is released under the MIT License. Refer to the LICENSE [file]() for detailed information.
