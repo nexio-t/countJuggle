@@ -41,7 +41,7 @@ You can run this script against the video clips found <a href="https://drive.goo
    ```
 As the script is running, your video clip should open with the appropriate annotations, like so: 
 
-![Example Annotation](./assets/annotation_example.png)
+<img src="annotation_example.png" alt="drawing" width="300"/>
 
 ## Detailed Script Functionality
 
