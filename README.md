@@ -1,4 +1,3 @@
-
 # Juggle Counter ⚡︎⚽ ︎︎
 
 ![Output Example](./assets/output.gif)
