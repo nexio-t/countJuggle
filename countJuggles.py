@@ -5,10 +5,13 @@ from datetime import datetime
 
 class CountJuggles:
     def __init__(self):
-        self.model = YOLO("/Users/tomasgear/Desktop/Projects/Development/countJuggle/weights/best.pt")
-        self.pose_model = YOLO("yolov8s-pose.pt")
 
-        video_path = "/Users/tomasgear/Desktop/Projects/Development/countJuggle/videos/edited/juggle_sample_6.mp4"
+        # ---CHANGE THIS LINE TO THE PATH OF YOUR WEIGHTS--- #
+        self.model = YOLO("/path/to/weights/best.pt")
+        self.pose_model = YOLO("yolov8s-pose.pt")
+        
+        # ---CHANGE THIS LINE TO THE PATH OF YOUR VIDEO--- #
+        video_path = "/path/to/video.mp4"
         self.cap = cv2.VideoCapture(video_path)
 
         # Combined juggle counting
